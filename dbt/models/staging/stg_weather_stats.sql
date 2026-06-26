@@ -1,0 +1,20 @@
+SELECT
+    date,
+    city,
+    country,
+    latitude,
+    longitude,
+    temperature_max,
+    temperature_min,
+    temperature_mean,
+    temperature_range,
+    apparent_temp_max,
+    apparent_temp_min,
+    humidity_max_pct,
+    precipitation_mm,
+    snowfall_mm,
+    windspeed_max,
+    wind_gusts_max,
+    weather_code,
+    weather_description
+FROM {{ source('raw', 'weather_stats') }}

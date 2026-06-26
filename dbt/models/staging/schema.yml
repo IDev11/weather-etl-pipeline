@@ -1,0 +1,17 @@
+version: 2
+
+models:
+  - name: stg_weather_stats
+    description: Cleaned daily weather observations from Open-Meteo for 20 global cities.
+    columns:
+      - name: date
+        description: Observation date (UTC)
+        tests: [not_null]
+      - name: city
+        description: City name
+        tests: [not_null]
+      - name: temperature_max
+        description: Daily maximum temperature at 2m (°C)
+        tests: [not_null]
+      - name: precipitation_mm
+        description: Total daily precipitation (mm)

@@ -1,0 +1,9 @@
+# For running the ETL locally (outside Docker).
+# The Airflow image installs its own copy via requirements-airflow.txt / Dockerfile.
+pandas
+requests
+pyarrow
+sqlalchemy
+psycopg2-binary
+dbt-core
+dbt-postgres

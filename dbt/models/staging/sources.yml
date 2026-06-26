@@ -1,0 +1,10 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: Raw weather landing table written by the Airflow `load` task.
+    tables:
+      - name: weather_stats
+        description: One row per city per day, straight from Open-Meteo (cleaned in transform).
+        loaded_at_field: null

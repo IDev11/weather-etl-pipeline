@@ -1,0 +1,256 @@
+{
+  "title": "Global Weather Dashboard",
+  "uid": "weather-main",
+  "timezone": "browser",
+  "refresh": "1h",
+  "schemaVersion": 39,
+  "tags": ["weather", "heat"],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Current Conditions — All Cities",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "options": {
+        "sortBy": [{ "displayName": "Temp Max °C", "desc": true }]
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT city, country, temperature_max AS \"Temp Max °C\", apparent_temp_max AS \"Feels Like °C\", humidity_max_pct AS \"Humidity %\", precipitation_mm AS \"Rain mm\", wind_gusts_max AS \"Gusts km/h\", heat_category AS \"Category\", weather_description AS \"Conditions\" FROM weather.mart_daily_weather WHERE date = (SELECT MAX(date) FROM weather.mart_daily_weather) ORDER BY temperature_max DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Temperature Trend — Last 30 Days",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 16, "h": 9 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": { "lineWidth": 2 }
+        }
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT date AS time, city, temperature_max FROM weather.mart_daily_weather WHERE date >= (SELECT MAX(date) FROM weather.mart_daily_weather) - INTERVAL '30 days' ORDER BY date",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Temperature Anomaly This Month vs History",
+      "type": "bargauge",
+      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 9 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null },
+              { "color": "green", "value": -1 },
+              { "color": "yellow", "value": 1 },
+              { "color": "orange", "value": 2 },
+              { "color": "red", "value": 4 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT city, temp_anomaly_c FROM weather.mart_city_anomalies ORDER BY temp_anomaly_c DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Heat Wave Episodes (≥ 3 consecutive days ≥ 35°C)",
+      "type": "table",
+      "gridPos": { "x": 0, "y": 17, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT city, country, wave_start AS \"Start\", wave_end AS \"End\", duration_days AS \"Days\", peak_temp_c AS \"Peak °C\", avg_temp_c AS \"Avg °C\" FROM weather.mart_heat_waves ORDER BY wave_start DESC LIMIT 30",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Monthly Precipitation — Last 6 Months",
+      "type": "barchart",
+      "gridPos": { "x": 12, "y": 17, "w": 12, "h": 8 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "fieldConfig": {
+        "defaults": { "unit": "lengthmm" }
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT month, city, total_precipitation_mm FROM weather.mart_monthly_averages WHERE month >= (SELECT MAX(month) FROM weather.mart_monthly_averages) - INTERVAL '6 months' ORDER BY month",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Hottest City Today",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 25, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 28 },
+              { "color": "orange", "value": 35 },
+              { "color": "red", "value": 40 }
+            ]
+          }
+        }
+      },
+      "transformations": [{ "id": "rowsToFields", "options": {} }],
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT city, temperature_max FROM weather.mart_daily_weather WHERE date = (SELECT MAX(date) FROM weather.mart_daily_weather) ORDER BY temperature_max DESC LIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Windiest City Today",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 25, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "velocitykmh",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 40 },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 80 }
+            ]
+          }
+        }
+      },
+      "transformations": [{ "id": "rowsToFields", "options": {} }],
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT city, wind_gusts_max FROM weather.mart_daily_weather WHERE date = (SELECT MAX(date) FROM weather.mart_daily_weather) ORDER BY wind_gusts_max DESC LIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Total Heat Wave Days This Year",
+      "type": "stat",
+      "gridPos": { "x": 12, "y": 25, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 10 },
+              { "color": "red", "value": 30 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(duration_days) AS \"Heat Wave Days This Year\" FROM weather.mart_heat_waves WHERE EXTRACT(YEAR FROM wave_start) = EXTRACT(YEAR FROM CURRENT_DATE)",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Wettest City This Month",
+      "type": "stat",
+      "gridPos": { "x": 18, "y": 25, "w": 6, "h": 4 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value_and_name", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" } },
+      "fieldConfig": {
+        "defaults": { "unit": "lengthmm" }
+      },
+      "transformations": [{ "id": "rowsToFields", "options": {} }],
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT city, total_precipitation_mm FROM weather.mart_monthly_averages WHERE month = (SELECT MAX(month) FROM weather.mart_monthly_averages) ORDER BY total_precipitation_mm DESC LIMIT 1",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Data Freshness (days since latest reading)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 29, "w": 24, "h": 3 },
+      "datasource": { "type": "postgres", "uid": "weather-postgres" },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "" } },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "d",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 3 },
+              { "color": "orange", "value": 6 },
+              { "color": "red", "value": 8 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "rawQuery": true,
+          "rawSql": "SELECT (CURRENT_DATE - MAX(date)) AS \"Days Behind\" FROM weather.mart_daily_weather",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}

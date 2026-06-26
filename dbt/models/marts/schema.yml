@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: int_city_climatology
+    description: Per-city, per-month 90th-percentile temperature baseline used to define local heat-wave thresholds.
+    columns:
+      - name: city
+        tests: [not_null]
+      - name: month_num
+        tests:
+          - not_null
+          - accepted_values:
+              values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+      - name: heat_threshold
+        description: Local hot-day threshold (max of the month's p90 and a 28°C floor).
+        tests: [not_null]
+
+  - name: mart_daily_weather
+    description: Daily weather enriched with absolute heat category and a climate-relative heat-wave flag.
+    columns:
+      - name: date
+        tests: [not_null]
+      - name: city
+        tests: [not_null]
+      - name: is_heat_wave_day
+        description: True if the day's max temp meets/exceeds the city's local threshold.
+        tests: [not_null]
+      - name: feels_like_gap_c
+        description: Apparent minus actual max temperature (°C).
+
+  - name: mart_heat_waves
+    description: Heat wave episodes — 3+ consecutive days at/above the city's local threshold.
+    columns:
+      - name: city
+        tests: [not_null]
+      - name: duration_days
+        tests: [not_null]
+      - name: wave_start
+        tests: [not_null]
+
+  - name: mart_monthly_averages
+    description: Monthly aggregates per city, including a count of local heat-wave days.
+    columns:
+      - name: heat_wave_days
+        description: Days in the month at/above the city's local threshold.
+        tests: [not_null]
+
+  - name: mart_city_anomalies
+    description: >
+      Current month-to-date vs the historical average for the same calendar month
+      and same days-of-month. Positive temp_anomaly_c means warmer than usual.
+    columns:
+      - name: city
+        tests:
+          - not_null
+          - unique
+      - name: temp_anomaly_c
+        description: Current month-to-date avg temp minus the historical same-period average (°C).
+      - name: days_counted
+        description: Number of days of the current month included in the comparison.
